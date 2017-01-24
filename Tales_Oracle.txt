@@ -1,0 +1,5 @@
+Name,Image,CardType,Icons,Immunity,Weakness,Health,RulesText,FlavorText
+Old Peasant,C_OldPeasant,C,[P]_{K},,,1,,All stories exalt either glorious warriors or powerful mages. But no adventure ever even started without the bread of the peasant and the tales of the elder.
+Bandit,C_Bandit,C,[G]^<L>,,,1,,
+Wild Goat,B_WildGoat,B,[P]^<R>_{C}&{R},,,2,,As gracefuly as she skips through the cliffs\, she will slam her head into yours. And hers is harder.
+Rust Scarab,B_RustScarab,B,<L>,L,W,3,,Ages of slumber have turned this behemoth into a walking fortress.
