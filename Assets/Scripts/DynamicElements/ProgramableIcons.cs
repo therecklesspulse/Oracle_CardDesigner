@@ -28,15 +28,16 @@ public class ProgramableIcons : DynamicElement {
 
     [SerializeField]
     protected string associationsFileName = "";
-
     [SerializeField]
     protected Association[] associations;
 
     [SerializeField]
-    protected string[] modifiers;
-
+    protected string modifiersClassName = "ModifierMethods";
     [SerializeField]
-    protected Association assoc = new Association();
+    protected ModifierAssociation[] modifiers;
+
+    //[SerializeField]
+    //protected Association assoc = new Association();
 
     private List<GameObject> _iconsPool = new List<GameObject>();
     private int _nRequested = 0;
@@ -91,7 +92,9 @@ public class ProgramableIcons : DynamicElement {
             }
             else
             {
-                //Check for modifyer character maybe?
+                string mod = GetAssociatedModifier(c);
+                if(mod != "")
+                    ModifiersManager.ApplyModifier(modifiersClassName, mod);
             }
         }
     }
@@ -185,6 +188,19 @@ public class ProgramableIcons : DynamicElement {
         return result;
     }
 
+    private string GetAssociatedModifier(char command)
+    {
+        string result = "";
+        for (int i = 0; i < modifiers.Length; i++)
+        {
+            if (modifiers[i].command == command.ToString())
+            {
+                result = modifiers[i].modifierID;
+                break;
+            }
+        }
+        return result;
+    }
 }
 
 
@@ -201,8 +217,9 @@ public class ProgramableIconsEditor : Editor
     SerializedProperty reverse;
 
     SerializedProperty associationsFileName;
-
     SerializedProperty associations;
+
+    SerializedProperty modifiersClassName;
     SerializedProperty modifiers;
 
     SerializedProperty arraySize;
@@ -218,8 +235,9 @@ public class ProgramableIconsEditor : Editor
         reverse = serializedObject.FindProperty("reverse");
 
         associationsFileName = serializedObject.FindProperty("associationsFileName");
-
         associations = serializedObject.FindProperty("associations");
+
+        modifiersClassName = serializedObject.FindProperty("modifiersClassName");
         modifiers = serializedObject.FindProperty("modifiers");
     }
 
@@ -244,7 +262,7 @@ public class ProgramableIconsEditor : Editor
         {
             EditorGUILayout.LabelField("Filename:  ", EditorStyles.wordWrappedLabel);
             EditorGUILayout.PropertyField(associationsFileName, GUIContent.none);
-            EditorGUILayout.LabelField(".txt", EditorStyles.helpBox);
+            EditorGUILayout.LabelField(".txt", EditorStyles.helpBox, GUILayout.Width(30));
         }
         EditorGUILayout.EndHorizontal();
         if (GUILayout.Button("Load From File"))
@@ -262,6 +280,13 @@ public class ProgramableIconsEditor : Editor
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Modifiers", EditorStyles.boldLabel);
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.LabelField("Class Name:    ", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.PropertyField(modifiersClassName, GUIContent.none);
+            EditorGUILayout.LabelField(".cs", EditorStyles.helpBox, GUILayout.Width(30));
+        }
+        EditorGUILayout.EndHorizontal();
         EditorGUILayout.PropertyField(modifiers, true);
 
         serializedObject.ApplyModifiedProperties();

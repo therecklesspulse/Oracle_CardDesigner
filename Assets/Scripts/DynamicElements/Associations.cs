@@ -40,4 +40,3 @@ public class AssociationDrawer : PropertyDrawer
         EditorGUI.EndProperty();
     }
 }
-
