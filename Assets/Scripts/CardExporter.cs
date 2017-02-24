@@ -2,6 +2,7 @@
 using UnityEditor;
 using System.Collections;
 using System;
+using System.IO;
 
 [ExecuteInEditMode]
 public class CardExporter : MonoBehaviour {
@@ -11,76 +12,108 @@ public class CardExporter : MonoBehaviour {
     [SerializeField]
     bool exportSet = false;
 
-    [SerializeField]
-    Camera mainCamera;
+    bool exportInPlayMode = false;
+
     [SerializeField]
     int targetWidth = 375;
     [SerializeField]
     int targetHeight = 525;
 
+    const string CARD_PATH = "/Resources/Cards/";
+
     void OnEnable()
     {
-        mainCamera = Camera.main;
+        EditorApplication.update += OnEditorUpdate;
     }
 
     void OnValidate()
     {
         if (exportCard)
         {
-            ExportCameraImage();
+            ExportCard();
             exportCard = false;
         }
 
-        if (exportCard)
+        if (exportSet)
         {
             ExportSet();
             exportSet = false;
         }
     }
 
-    void ExportCameraImage()
+    void ExportCard()
     {
-        TakeScreenShot();
+        TakeScreenshot();
     }
 
     void ExportSet()
     {
-
+        //if (!exportInPlayMode)
+        //{
+            exportInPlayMode = true;
+            UnityEditor.EditorApplication.isPlaying = true;
+            StartCoroutine(TakeScreenshotsOfSet());
+        //}
     }
 
-    private void TakeScreenShot()
+    void OnDisable()
+    {
+        EditorApplication.update -= OnEditorUpdate;
+    }
+
+    void OnEditorUpdate() {}
+
+    void Start()
+    {
+        if (exportInPlayMode)
+        {
+            //StartCoroutine(TakeScreenshotsOfSet());
+            //exportInPlayMode = false;
+        }        
+    }
+
+    private void TakeScreenshot()
+    {
+        /*Vector2 size = Handles.GetMainGameViewSize();
+        Texture2D tex = new Texture2D((int)size.x, (int)size.y, TextureFormat.RGB24, false);
+        tex.ReadPixels(new Rect(0, 0, (int)size.x, (int)size.y), 0, 0);
+        tex.Apply();
+        byte[] bytes = tex.EncodeToPNG();
+        File.WriteAllBytes(Application.dataPath + CARD_PATH + Oracle.GetValue("Name") + ".png", bytes);*/
+        Application.CaptureScreenshot(Application.dataPath + CARD_PATH + Oracle.GetValue("Name") + ".png");
+        //AssetDatabase.Refresh();
+    }
+
+    IEnumerator TakeScreenshotsOfSet()
     {
 
-        /*RenderTexture rt = new RenderTexture(targetWidth, targetHeight, 24);
-        RenderTexture.active = rt;
-        mainCamera.targetTexture = rt;
-        mainCamera.Render();
+        yield return new WaitForEndOfFrame();
+        print("started");
+        int activeCard = Oracle.CardToShowID;
+        if (activeCard == 0) activeCard = 1;
 
-        Texture2D cardImage = new Texture2D(targetWidth, targetHeight, TextureFormat.RGB24, false);      
-        cardImage.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
-        cardImage.Apply();
+        for (int i = 1; i <= Oracle.NumberOfCards; i++)
+        {
+            Oracle.CardToShowID = i;
+            foreach (DynamicElement de in GetComponentsInChildren<DynamicElement>())
+                de.Refresh();
 
-        mainCamera.targetTexture = null;
-        RenderTexture.active = null;
-        DestroyImmediate(rt);
+            TakeScreenshot();
+            yield return new  WaitForSeconds(1);
+            
+            print(Oracle.CardToShowID);       
+        }
 
+        UnityEditor.EditorApplication.isPlaying = false;
 
-        // Encode texture into PNG
-        byte[] bytes = cardImage.EncodeToPNG();
+        Oracle.CardToShowID = activeCard;
+        foreach (DynamicElement de in GetComponentsInChildren<DynamicElement>())
+            de.Refresh();
 
-        // save in memory
-        string filename = "patata.png";
-        string path = Application.dataPath  + "/Resources/Cards/" + filename;
-
-        System.IO.File.WriteAllBytes(path, bytes);*/
-
-        Application.CaptureScreenshot(Application.dataPath + "/Resources/Cards/patata.png");
+        print("ended");
     }
 }
 
-//Windows Store Apps: Application.persistentDataPath points to <user>\AppData\Local\Packages\<productname>\LocalState.
-//Mac: The persistentDataPath is written into ~/Library/Application Support/company name/product name.
-//IOS and Android: persistentDataPath will point to a public directory on the device.
 [CustomEditor(typeof(CardExporter))]
 [CanEditMultipleObjects]
 public class CardExporterEditor : Editor
@@ -116,5 +149,6 @@ public class CardExporterEditor : Editor
         EditorGUILayout.EndHorizontal();
 
         serializedObject.ApplyModifiedProperties();
+        AssetDatabase.Refresh();
     }
 }
